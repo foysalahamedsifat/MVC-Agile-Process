@@ -99,6 +99,6 @@ stages:
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
-              appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
+              appName: 'my-web-app-fsifat'  # Replace with your actual Azure Web App name
               package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
 
