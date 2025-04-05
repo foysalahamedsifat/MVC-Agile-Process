@@ -1,7 +1,11 @@
 trigger:
   branches:
     include:
-      - main
+      - main  # Change this to your default branch if it's different
+
+# Use the self-hosted agent pool
+pool:
+  name: 'SelfHostedPool'  # Replace with the name of your self-hosted agent pool
 
 stages:
 # Build Stage
@@ -10,7 +14,7 @@ stages:
   jobs:
     - job: BuildJob
       pool:
-        name: 'Default'  # Your self-hosted agent pool
+        name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
       steps:
         - task: UseDotNet@2
           inputs:
@@ -50,7 +54,7 @@ stages:
   jobs:
     - job: DeployToAzure
       pool:
-        vmImage: 'windows-latest'
+        name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
       steps:
         - task: DownloadBuildArtifacts@0
           inputs:
@@ -61,6 +65,6 @@ stages:
 
         - task: AzureWebApp@1
           inputs:
-            azureSubscription: 'MyDevServiceConnection'
-            appName: 'my-web-app-name'
-            package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'
+            azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
+            appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
+            package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
