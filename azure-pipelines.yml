@@ -38,16 +38,16 @@ stages:
               command: 'publish'
               publishWebProjects: true
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure the publish directory is correct
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Correct staging directory
               zipAfterPublish: true
 
-          # Add a script to verify if files are being published to the artifact directory
-          - script: dir $(Build.ArtifactStagingDirectory)
+          # List files in the artifact staging directory
+          - script: dir $(Build.ArtifactStagingDirectory)  # Ensure this works within the Azure pipeline environment
             displayName: 'List Files in Artifact Staging Directory'
 
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Ensure this points to the correct directory
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Ensure path is relative to the agent's environment
               ArtifactName: 'fsifat'  # Name of the artifact to be published
               publishLocation: 'Container'
 
@@ -67,7 +67,7 @@ stages:
               artifactName: 'fsifat'  # Name of the artifact to download
               downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
 
-          # Add a script to check the artifact path during download
+          # List the artifact files to confirm the download
           - script: dir $(System.ArtifactsDirectory)
             displayName: 'List Files in Artifact Directory'
 
