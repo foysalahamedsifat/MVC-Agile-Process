@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  name: 'SelfHostedPool'  # <- Your custom pool name
 
 variables:
   buildConfiguration: 'Release'
@@ -11,7 +11,7 @@ steps:
 - task: UseDotNet@2
   inputs:
     packageType: 'sdk'
-    version: '8.0.x'   # Ensure .NET 8 is used
+    version: '8.0.x'
     installationPath: $(Agent.ToolsDirectory)/dotnet
 
 - task: DotNetCoreCLI@2
