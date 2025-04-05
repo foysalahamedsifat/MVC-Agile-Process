@@ -38,12 +38,16 @@ stages:
               command: 'publish'
               publishWebProjects: true
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)'
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure the publish directory is correct
               zipAfterPublish: true
+
+          # Add a script to verify if files are being published to the artifact directory
+          - script: dir $(Build.ArtifactStagingDirectory)
+            displayName: 'List Files in Artifact Staging Directory'
 
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Ensure this points to the correct directory
               ArtifactName: 'fsifat'  # Name of the artifact to be published
               publishLocation: 'Container'
 
@@ -63,9 +67,12 @@ stages:
               artifactName: 'fsifat'  # Name of the artifact to download
               downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
 
+          # Add a script to check the artifact path during download
+          - script: dir $(System.ArtifactsDirectory)
+            displayName: 'List Files in Artifact Directory'
+
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
               appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
-              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
-
+              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Correct path to the published artifact
