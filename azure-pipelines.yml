@@ -8,63 +8,64 @@ pool:
   name: 'SelfHostedPool'  # Replace with the name of your self-hosted agent pool
 
 stages:
-# Build Stage
-- stage: Build
-  displayName: 'Build and Publish Artifact'
-  jobs:
-    - job: BuildJob
-      pool:
-        name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
-      steps:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: '8.0.x'
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+  # Build Stage
+  - stage: Build
+    displayName: 'Build and Publish Artifact'
+    jobs:
+      - job: BuildJob
+        pool:
+          name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '8.0.x'
+              installationPath: $(Agent.ToolsDirectory)/dotnet
 
-        - task: DotNetCoreCLI@2
-          inputs:
-            command: 'restore'
-            projects: '**/*.sln'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'restore'
+              projects: '**/*.sln'
 
-        - task: DotNetCoreCLI@2
-          inputs:
-            command: 'build'
-            projects: '**/*.sln'
-            arguments: '/p:Configuration=Release'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'build'
+              projects: '**/*.sln'
+              arguments: '/p:Configuration=Release'
 
-        - task: DotNetCoreCLI@2
-          inputs:
-            command: 'publish'
-            publishWebProjects: true
-            arguments: '--configuration Release'
-            publishDirectory: '$(Build.ArtifactStagingDirectory)'
-            zipAfterPublish: true
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'publish'
+              publishWebProjects: true
+              arguments: '--configuration Release'
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'
+              zipAfterPublish: true
 
-        - task: PublishBuildArtifacts@1
-          inputs:
-            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-            ArtifactName: 'fsifat'
-            publishLocation: 'Container'
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'fsifat'  # Name of the artifact to be published
+              publishLocation: 'Container'
 
-# Deploy Stage
-- stage: Deploy
-  displayName: 'Deploy to Azure'
-  dependsOn: Build
-  jobs:
-    - job: DeployToAzure
-      pool:
-        name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
-      steps:
-        - task: DownloadBuildArtifacts@0
-          inputs:
-            buildType: 'current'
-            downloadType: 'single'
-            artifactName: 'fsifat'
-            downloadPath: '$(System.ArtifactsDirectory)'
+  # Deploy Stage
+  - stage: Deploy
+    displayName: 'Deploy to Azure'
+    dependsOn: Build
+    jobs:
+      - job: DeployToAzure
+        pool:
+          name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
+        steps:
+          - task: DownloadBuildArtifacts@0
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: 'fsifat'  # Name of the artifact to download
+              downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
 
-        - task: AzureWebApp@1
-          inputs:
-            azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
-            appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
-            package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
+              appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
+              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
+
