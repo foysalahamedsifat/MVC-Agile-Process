@@ -47,7 +47,8 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
-                Get-ChildItem -Path $(Build.ArtifactStagingDirectory)
+                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)"
+
 
           - task: PublishBuildArtifacts@1
             inputs:
