@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <OutputPath>bin\Release\net8.0\</OutputPath>
+    <PublishDir>bin\Release\net8.0\publish\</PublishDir>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
