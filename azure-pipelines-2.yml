@@ -1,39 +1,23 @@
-trigger: none  # Trigger manually or from a build pipeline
+trigger:
+- main  # Trigger on new builds
 
 pool:
-  name: 'SelfHostedPool'
+  name: 'SelfHostedPool'  # Use self-hosted agent pool
 
-jobs:
-- job: DeployToIIS
-  displayName: 'Deploy to IIS'
-  pool:
-    name: 'SelfHostedPool'
+variables:
+  buildConfiguration: 'Release'
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    inputs:
-      buildType: 'current'
-      downloadType: 'single'
-      artifactName: 'fsifat'  # Replace with your artifact name
-      downloadPath: '$(System.ArtifactsDirectory)'
+steps:
+- task: DownloadBuildArtifacts@0
+  inputs:
+    buildType: 'specific'
+    project: '$(Build.ProjectName)'
+    definition: '$(Build.DefinitionName)'
+    buildVersionToDownload: 'latest'
+    downloadPath: '$(Build.SourcesDirectory)/drop'
 
-  - task: ExtractFiles@1
-    inputs:
-      archiveFilePatterns: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'
-      destinationFolder: 'C:\Deploy\MovieMVC\Extracted'
-      cleanDestinationFolder: true
-      overwriteExistingFiles: true
-
-  - task: PowerShell@2
-    displayName: 'Deploy to IIS'
-    inputs:
-      targetType: 'inline'
-      script: |
-        # Define the source and destination
-        $source = "C:\Deploy\MovieMVC\Extracted"
-        $destination = "C:\inetpub\wwwroot\MovieMVC"
-        
-        # Copy the extracted files to the IIS folder
-        Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
-
-        Write-Host "Deployment complete."
+- task: IISWebAppDeploymentOnMachineGroup@0
+  inputs:
+    WebAppName: 'MovieMVC'  # Your web app name
+    Package: '$(Build.SourcesDirectory)/drop/*.zip'  # Path to the build artifact
+    WebAppPhysicalPath: 'C:\inetpub\wwwroot\MovieMVC'  # Deployment path for IIS
