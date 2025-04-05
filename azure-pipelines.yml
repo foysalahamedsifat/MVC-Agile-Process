@@ -42,7 +42,7 @@ stages:
               command: 'publish'
               publishWebProjects: true
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)\publish'  # Ensure it's a valid path
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure it's a valid path
               zipAfterPublish: true
 
           # List files in Artifact Staging Directory for debugging
