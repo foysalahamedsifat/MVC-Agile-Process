@@ -1,44 +1,66 @@
 trigger:
   branches:
     include:
-      - main  # Change this to your default branch if it's different
+      - main
 
-pool:
-  name: 'Default'  # Specify your self-hosted agent pool if you are using it
+stages:
+# Build Stage
+- stage: Build
+  displayName: 'Build and Publish Artifact'
+  jobs:
+    - job: BuildJob
+      pool:
+        name: 'Default'  # Your self-hosted agent pool
+      steps:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: '8.0.x'
+            installationPath: $(Agent.ToolsDirectory)/dotnet
 
-steps:
-  # Install .NET SDK (change version as needed)
-  - task: UseDotNet@2
-    inputs:
-      packageType: 'sdk'
-      version: '8.0.x'  # Adjust to the version of .NET you are using
-      installationPath: $(Agent.ToolsDirectory)/dotnet
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'restore'
+            projects: '**/*.sln'
 
-  # Restore NuGet packages
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'restore'
-      projects: '**/*.sln'  # Restores all solutions in the repository
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'build'
+            projects: '**/*.sln'
+            arguments: '/p:Configuration=Release'
 
-  # Build the project
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'build'
-      projects: '**/*.sln'  # Builds all solutions in the repository
-      arguments: '/p:Configuration=Release'
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'publish'
+            publishWebProjects: true
+            arguments: '--configuration Release'
+            publishDirectory: '$(Build.ArtifactStagingDirectory)'
+            zipAfterPublish: true
 
-  # Publish the project
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: 'publish'
-      publishWebProjects: true
-      deleteExistingFiles: true
-      publishDirectory: $(Build.ArtifactStagingDirectory)
-      arguments: '--configuration Release'
+        - task: PublishBuildArtifacts@1
+          inputs:
+            PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+            ArtifactName: 'fsifat'
+            publishLocation: 'Container'
 
-  # Publish build artifacts
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Path where build output is stored
-      ArtifactName: 'fsifat'  # Name of the artifact
-      publishLocation: 'Container'
+# Deploy Stage
+- stage: Deploy
+  displayName: 'Deploy to Azure'
+  dependsOn: Build
+  jobs:
+    - job: DeployToAzure
+      pool:
+        vmImage: 'windows-latest'
+      steps:
+        - task: DownloadBuildArtifacts@0
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'fsifat'
+            downloadPath: '$(System.ArtifactsDirectory)'
+
+        - task: AzureWebApp@1
+          inputs:
+            azureSubscription: 'MyDevServiceConnection'
+            appName: 'my-web-app-name'
+            package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'
