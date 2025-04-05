@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main  # Change this to your default branch if it's different
+
+pool:
+  name: 'Default'  # Specify your self-hosted agent pool if you are using it
+
+steps:
+  - task: UseDotNet@2
+    inputs:
+      packageType: 'sdk'
+      version: '8.0.x'  # Adjust to the version of .NET you are using
+      installationPath: $(Agent.ToolsDirectory)/dotnet
+
+  - task: Restore@2
+    inputs:
+      restoreSolution: '**/*.sln'  # Restores all solutions in the repository
+
+  - task: Build@1
+    inputs:
+      solution: '**/*.sln'  # Builds all solutions in the repository
+      msbuildArgs: '/p:Configuration=Release'
+
+  - task: Publish@1
+    inputs:
+      publishWebProjects: true
+      deleteExistingFiles: true
+      publishDirectory: $(Build.ArtifactStagingDirectory)
+      
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Path where build output is stored
+      ArtifactName: 'fsifat'  # Name of the artifact
+      publishLocation: 'Container'
