@@ -7,27 +7,36 @@ pool:
   name: 'Default'  # Specify your self-hosted agent pool if you are using it
 
 steps:
+  # Install .NET SDK (change version as needed)
   - task: UseDotNet@2
     inputs:
       packageType: 'sdk'
       version: '8.0.x'  # Adjust to the version of .NET you are using
       installationPath: $(Agent.ToolsDirectory)/dotnet
 
-  - task: Restore@2
+  # Restore NuGet packages
+  - task: DotNetCoreCLI@2
     inputs:
-      restoreSolution: '**/*.sln'  # Restores all solutions in the repository
+      command: 'restore'
+      projects: '**/*.sln'  # Restores all solutions in the repository
 
-  - task: Build@1
+  # Build the project
+  - task: DotNetCoreCLI@2
     inputs:
-      solution: '**/*.sln'  # Builds all solutions in the repository
-      msbuildArgs: '/p:Configuration=Release'
+      command: 'build'
+      projects: '**/*.sln'  # Builds all solutions in the repository
+      arguments: '/p:Configuration=Release'
 
-  - task: Publish@1
+  # Publish the project
+  - task: DotNetCoreCLI@2
     inputs:
+      command: 'publish'
       publishWebProjects: true
       deleteExistingFiles: true
       publishDirectory: $(Build.ArtifactStagingDirectory)
-      
+      arguments: '--configuration Release'
+
+  # Publish build artifacts
   - task: PublishBuildArtifacts@1
     inputs:
       PathtoPublish: $(Build.ArtifactStagingDirectory)  # Path where build output is stored
