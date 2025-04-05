@@ -14,12 +14,12 @@ jobs:
     inputs:
       buildType: 'current'
       downloadType: 'single'
-      artifactName: 'drop'  # Replace with your artifact name
+      artifactName: 'fsifat'  # Replace with your artifact name
       downloadPath: '$(System.ArtifactsDirectory)'
 
   - task: ExtractFiles@1
     inputs:
-      archiveFilePatterns: '$(System.ArtifactsDirectory)/drop/**/*.zip'
+      archiveFilePatterns: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'
       destinationFolder: 'C:\Deploy\MovieMVC\Extracted'
       cleanDestinationFolder: true
       overwriteExistingFiles: true
