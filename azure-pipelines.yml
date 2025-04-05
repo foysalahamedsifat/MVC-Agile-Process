@@ -38,16 +38,20 @@ stages:
               command: 'publish'
               publishWebProjects: true
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Correct staging directory
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure the build outputs are correctly staged
               zipAfterPublish: true
 
-          # List files in the artifact staging directory
-          - script: dir $(Build.ArtifactStagingDirectory)  # Ensure this works within the Azure pipeline environment
+          - task: PowerShell@2
             displayName: 'List Files in Artifact Staging Directory'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
+                Get-ChildItem -Path $(Build.ArtifactStagingDirectory)
 
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Ensure path is relative to the agent's environment
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Path to the published files
               ArtifactName: 'fsifat'  # Name of the artifact to be published
               publishLocation: 'Container'
 
@@ -67,12 +71,16 @@ stages:
               artifactName: 'fsifat'  # Name of the artifact to download
               downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
 
-          # List the artifact files to confirm the download
-          - script: dir $(System.ArtifactsDirectory)
-            displayName: 'List Files in Artifact Directory'
+          - task: PowerShell@2
+            displayName: 'List Files in Artifact Download Directory'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Listing files in $(System.ArtifactsDirectory)"
+                Get-ChildItem -Path $(System.ArtifactsDirectory)
 
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
               appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
-              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Correct path to the published artifact
+              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
