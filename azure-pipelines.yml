@@ -3,7 +3,6 @@ trigger:
     include:
       - main  # Change this to your default branch if it's different
 
-# Use the self-hosted agent pool
 pool:
   name: 'SelfHostedPool'  # Replace with the name of your self-hosted agent pool
 
@@ -20,30 +19,30 @@ stages:
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
-              version: '8.0.x'
+              version: '8.0.x'  # Ensure you are using the correct .NET version
               installationPath: $(Agent.ToolsDirectory)/dotnet
 
           # Restore NuGet packages
           - task: DotNetCoreCLI@2
             inputs:
               command: 'restore'
-              projects: '**/*.sln'
+              projects: '**/*.sln'  # Restores all solutions in the repository
 
           # Build the solution in Release configuration
           - task: DotNetCoreCLI@2
             inputs:
               command: 'build'
               projects: '**/*.sln'
-              arguments: '/p:Configuration=Release'
+              arguments: '/p:Configuration=Release'  # Build in Release mode
 
           # Publish the project and stage files
           - task: DotNetCoreCLI@2
             inputs:
               command: 'publish'
-              publishWebProjects: true
+              publishWebProjects: true  # Ensure this is true if you're publishing a web project
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)\publish'  # Ensure it's a valid path
-              zipAfterPublish: true
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure it's a valid path
+              zipAfterPublish: true  # Zips the published content
 
           # List files in Artifact Staging Directory for debugging
           - task: PowerShell@2
@@ -60,20 +59,20 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "Listing files in $(Build.ArtifactStagingDirectory)\publish"
-                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)\publish" -Recurse
+                Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
+                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
 
           # Publish the build artifacts
           - task: PublishBuildArtifacts@1
             inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)\publish'  # Path to the published files
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Path to the published files
               ArtifactName: 'fsifat'  # Name of the artifact to be published
-              publishLocation: 'Container'
+              publishLocation: 'Container'  # Store the artifact in the pipeline's container
 
   # Deploy Stage
   - stage: Deploy
     displayName: 'Deploy to Azure'
-    dependsOn: Build
+    dependsOn: Build  # This ensures the Deploy stage runs only after the Build stage
     jobs:
       - job: DeployToAzure
         pool:
@@ -82,7 +81,7 @@ stages:
           # Download the build artifacts from the previous stage
           - task: DownloadBuildArtifacts@0
             inputs:
-              buildType: 'current'
+              buildType: 'current'  # Use the current build artifacts
               downloadType: 'single'
               artifactName: 'fsifat'  # Name of the artifact to download
               downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
@@ -102,3 +101,4 @@ stages:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
               appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
               package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
+
