@@ -16,40 +16,45 @@ stages:
         pool:
           name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
         steps:
+          # Use the .NET SDK
           - task: UseDotNet@2
             inputs:
               packageType: 'sdk'
               version: '8.0.x'
               installationPath: $(Agent.ToolsDirectory)/dotnet
 
+          # Restore NuGet packages
           - task: DotNetCoreCLI@2
             inputs:
               command: 'restore'
               projects: '**/*.sln'
 
+          # Build the solution in Release configuration
           - task: DotNetCoreCLI@2
             inputs:
               command: 'build'
               projects: '**/*.sln'
               arguments: '/p:Configuration=Release'
 
+          # Publish the project and stage files
           - task: DotNetCoreCLI@2
             inputs:
               command: 'publish'
               publishWebProjects: true
               arguments: '--configuration Release'
-              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure the build outputs are correctly staged
+              publishDirectory: '$(Build.ArtifactStagingDirectory)'  # Ensure build outputs are correctly staged
               zipAfterPublish: true
 
+          # List files in Artifact Staging Directory for debugging
           - task: PowerShell@2
             displayName: 'List Files in Artifact Staging Directory'
             inputs:
               targetType: 'inline'
               script: |
                 Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
-                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)"
+                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
 
-
+          # Publish the build artifacts
           - task: PublishBuildArtifacts@1
             inputs:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'  # Path to the published files
@@ -65,6 +70,7 @@ stages:
         pool:
           name: 'SelfHostedPool'  # Ensure you use your self-hosted agent pool
         steps:
+          # Download the build artifacts from the previous stage
           - task: DownloadBuildArtifacts@0
             inputs:
               buildType: 'current'
@@ -72,14 +78,16 @@ stages:
               artifactName: 'fsifat'  # Name of the artifact to download
               downloadPath: '$(System.ArtifactsDirectory)'  # Path to download the artifact
 
+          # List files in Artifact Download Directory for debugging
           - task: PowerShell@2
             displayName: 'List Files in Artifact Download Directory'
             inputs:
               targetType: 'inline'
               script: |
                 Write-Host "Listing files in $(System.ArtifactsDirectory)"
-                Get-ChildItem -Path $(System.ArtifactsDirectory)
+                Get-ChildItem -Path "$(System.ArtifactsDirectory)" -Recurse
 
+          # Deploy the artifact to Azure Web App
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
