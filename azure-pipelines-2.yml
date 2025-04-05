@@ -1,0 +1,23 @@
+trigger:
+- main  # or the branch you are deploying from
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: DownloadBuildArtifacts@0
+  inputs:
+    buildType: 'specific'
+    project: '$(Build.ProjectName)'
+    definition: '$(Build.DefinitionName)'
+    buildVersionToDownload: 'latest'
+    downloadPath: '$(Build.SourcesDirectory)/drop'
+
+- task: IISWebAppDeploymentOnMachineGroup@0
+  inputs:
+    WebAppName: 'MovieMVC'  # The name of your IIS Web App
+    Package: '$(Build.SourcesDirectory)/drop/*.zip'  # Path to the artifact (zipped file)
+    WebAppPhysicalPath: 'C:\inetpub\wwwroot\MovieMVC'  # IIS target directory
