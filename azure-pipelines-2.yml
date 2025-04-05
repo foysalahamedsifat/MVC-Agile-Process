@@ -1,23 +1,39 @@
-trigger:
-- main  # or the branch you are deploying from
+trigger: none  # Trigger manually or from a build pipeline
 
 pool:
-  vmImage: 'windows-latest'
+  name: 'SelfHostedPool'
 
-variables:
-  buildConfiguration: 'Release'
+jobs:
+- job: DeployToIIS
+  displayName: 'Deploy to IIS'
+  pool:
+    name: 'SelfHostedPool'
 
-steps:
-- task: DownloadBuildArtifacts@0
-  inputs:
-    buildType: 'specific'
-    project: '$(Build.ProjectName)'
-    definition: '$(Build.DefinitionName)'
-    buildVersionToDownload: 'latest'
-    downloadPath: '$(Build.SourcesDirectory)/drop'
+  steps:
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'drop'  # Replace with your artifact name
+      downloadPath: '$(System.ArtifactsDirectory)'
 
-- task: IISWebAppDeploymentOnMachineGroup@0
-  inputs:
-    WebAppName: 'MovieMVC'  # The name of your IIS Web App
-    Package: '$(Build.SourcesDirectory)/drop/*.zip'  # Path to the artifact (zipped file)
-    WebAppPhysicalPath: 'C:\inetpub\wwwroot\MovieMVC'  # IIS target directory
+  - task: ExtractFiles@1
+    inputs:
+      archiveFilePatterns: '$(System.ArtifactsDirectory)/drop/**/*.zip'
+      destinationFolder: 'C:\Deploy\MovieMVC\Extracted'
+      cleanDestinationFolder: true
+      overwriteExistingFiles: true
+
+  - task: PowerShell@2
+    displayName: 'Deploy to IIS'
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Define the source and destination
+        $source = "C:\Deploy\MovieMVC\Extracted"
+        $destination = "C:\inetpub\wwwroot\MovieMVC"
+        
+        # Copy the extracted files to the IIS folder
+        Copy-Item -Path "$source\*" -Destination $destination -Recurse -Force
+
+        Write-Host "Deployment complete."
