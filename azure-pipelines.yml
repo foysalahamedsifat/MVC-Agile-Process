@@ -87,9 +87,10 @@ stages:
                 Write-Host "Listing files in $(System.ArtifactsDirectory)"
                 Get-ChildItem -Path "$(System.ArtifactsDirectory)" -Recurse
 
-          # Deploy the artifact to Azure Web App
+          # Ensure the file path for the Azure deployment is correct
           - task: AzureWebApp@1
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
               appName: 'my-web-app-name'  # Replace with your actual Azure Web App name
               package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
+
