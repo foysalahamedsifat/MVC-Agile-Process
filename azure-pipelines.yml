@@ -53,15 +53,6 @@ stages:
                 Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
                 Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
 
-          # List files in the publish directory for debugging
-          - task: PowerShell@2
-            displayName: 'List Files in Publish Directory'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "Listing files in $(Build.ArtifactStagingDirectory)"
-                Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)" -Recurse
-
           # Publish the build artifacts
           - task: PublishBuildArtifacts@1
             inputs:
@@ -100,4 +91,4 @@ stages:
             inputs:
               azureSubscription: 'MyDevServiceConnection'  # The name of your Azure service connection
               appName: 'my-web-app-fsifat'  # Replace with your actual Azure Web App name
-              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Path to the published artifact
+              package: '$(System.ArtifactsDirectory)/fsifat/**/*.zip'  # Adjust path to match the published artifact
